@@ -259,9 +259,53 @@
       color: #1a73e8;
       font-size: 18px;
     }
+
+    /* -------------------------------------------------------------
+       3. KOTAK KAMERA PENGAWAS (FLOATING CAMERA)
+       ------------------------------------------------------------- */
+    #camera-box {
+      display: none;
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      width: 110px;
+      height: 145px;
+      background: #000;
+      border: 2px solid #1a73e8;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 1000000;
+    }
+    #webcam-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* Efek Cermin */
+    }
+    .camera-badge {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(220, 53, 69, 0.85);
+      color: white;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
+
+  <!-- KOTAK KAMERA FLOATING -->
+  <div id="camera-box">
+    <video id="webcam-preview" autoplay playsinline muted></video>
+    <div class="camera-badge">🔴 PROCTORING</div>
+  </div>
 
   <!-- MODAL PERINGATAN PELANGGARAN -->
   <div class="overlay-warning" id="modal-warning">
@@ -272,7 +316,7 @@
     </div>
   </div>
 
-  <!-- MODAL KONFIRMASI SELESAI UJIAN (BARU) -->
+  <!-- MODAL KONFIRMASI SELESAI UJIAN -->
   <div class="overlay-modal" id="modal-konfirmasi-selesai">
     <div class="modal-card">
       <h3 style="color: #1a73e8; font-size: 18px; margin-bottom: 10px;">Konfirmasi Kirim Jawaban</h3>
@@ -321,7 +365,6 @@
         <div class="cbt-header">
           <h2>DIPSA EXAM CENTER</h2>
           <p>Kelas X</p>
-           <p>Pilih Mata Pelajaran untuk Memulai Ujian</p>
         </div>
         <div class="mapel-grid">
           <button class="btn-mapel" onclick="pilihMapel('PAI')">📖 PAI</button>
@@ -360,7 +403,7 @@
           </div>
           <button class="btn-submit" id="btn-login-submit" type="submit">Masuk Ujian</button>
         </form>
-        <div class="loading" id="loading-login">Memeriksa akun...</div>
+        <div class="loading" id="loading-login">Memeriksa akun &amp; mengaktifkan pengawas...</div>
         <div class="error-msg" id="err-login"></div>
       </div>
 
@@ -483,6 +526,7 @@
     let violationCount = 0;
     let countdownInterval = null;
     let examTimerInterval = null;
+    let cameraStream = null;
 
     function acakArray(array) {
       let currentIndex = array.length, randomIndex;
@@ -613,6 +657,34 @@
       }
     }
 
+    /* FUNGSI MENGAKTIFKAN KAMERA DEPAN */
+    function aktifkanKameraDepan() {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+          audio: false
+        })
+        .then(stream => {
+          cameraStream = stream;
+          const videoEl = document.getElementById("webcam-preview");
+          videoEl.srcObject = stream;
+          document.getElementById("camera-box").style.display = "block";
+        })
+        .catch(err => {
+          console.warn("Izin kamera ditolak atau perangkat tidak mendukung kamera:", err);
+        });
+      }
+    }
+
+    /* FUNGSI MEMATIKAN KAMERA */
+    function matikanKamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      document.getElementById("camera-box").style.display = "none";
+    }
+
     function prosesLogin(e) {
       e.preventDefault();
       requestFullscreenMode();
@@ -630,6 +702,9 @@
           if (data.status === "success") {
             userData = data.user;
             
+            // AKTIFKAN KAMERA SETELAH LOGIN BERHASIL
+            aktifkanKameraDepan();
+
             document.getElementById("val-nama").innerText = ": " + userData.nama;
             document.getElementById("val-kelas").innerText = ": " + userData.kelas;
             document.getElementById("val-nis").innerText = ": " + userData.nis + " / " + userData.nisn;
@@ -928,6 +1003,7 @@
       })
       .then(() => {
         document.getElementById("loading-submit").style.display = "none";
+        matikanKamera(); // MEMATIKAN KAMERA SETELAH SELESAI UJIAN
         switchScreen("screen-selesai");
         if (document.exitFullscreen) document.exitFullscreen();
       })
@@ -948,6 +1024,8 @@
       if (countdownInterval) clearInterval(countdownInterval);
       if (examTimerInterval) clearInterval(examTimerInterval);
       
+      matikanKamera(); // MEMATIKAN KAMERA JIKA KEMBALI KE AWAL
+
       selectedMapel = "";
       userData = null;
       listSoalData = [];
