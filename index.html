@@ -46,7 +46,7 @@
     .form-group { margin-bottom: 15px; text-align: left; }
     .form-group label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 5px; }
     .form-control { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; }
-    .form-control:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.2); }
+    .form-control:focus { border-color: #1a73e8; shadow: 0 0 0 3px rgba(26,115,232,0.2); }
     
     /* INPUT PASSWORD DENGAN IKON MATA SVG */
     .password-wrapper { position: relative; width: 100%; }
@@ -261,47 +261,54 @@
     }
 
     /* -------------------------------------------------------------
-       3. KOTAK KAMERA PENGAWAS (FLOATING CAMERA)
+       3. KOTAK KAMERA PENGAWAS (FLOATING & DRAGGABLE)
        ------------------------------------------------------------- */
     #camera-box {
       display: none;
       position: fixed;
-      top: 12px;
-      right: 12px;
-      width: 110px;
-      height: 145px;
+      top: 15px;
+      right: 15px;
+      width: 95px;
+      height: 125px;
       background: #000;
       border: 2px solid #1a73e8;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
       z-index: 1000000;
+      cursor: grab;
+      touch-action: none;
+    }
+    #camera-box:active {
+      cursor: grabbing;
     }
     #webcam-preview {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transform: scaleX(-1); /* Efek Cermin */
+      transform: scaleX(-1);
+      pointer-events: none;
     }
     .camera-badge {
       position: absolute;
       bottom: 4px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(220, 53, 69, 0.85);
+      background: rgba(220, 53, 69, 0.9);
       color: white;
-      font-size: 9px;
+      font-size: 8px;
       font-weight: bold;
-      padding: 2px 6px;
+      padding: 2px 5px;
       border-radius: 4px;
       letter-spacing: 0.5px;
       white-space: nowrap;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- KOTAK KAMERA FLOATING -->
+  <!-- KOTAK KAMERA FLOATING & DRAGGABLE -->
   <div id="camera-box">
     <video id="webcam-preview" autoplay playsinline muted></video>
     <div class="camera-badge">🔴 PROCTORING</div>
@@ -442,7 +449,7 @@
         <div class="header-soal-wrapper">
           <div class="header-soal-top">
             <span class="badge-mapel" id="label-mapel-soal">Mapel</span>
-            <span id="label-user-soal" style="color: #444; font-size: 13px; font-weight: 600; text-align: right;">Siswa</span>
+            <span id="label-user-soal" style="color: #444; font-size: 13px; font-weight: 600; text-align: right; padding-right: 15px;">Siswa</span>
           </div>
           <div class="header-soal-bottom">
             <div class="timer-soal-badge" id="box-timer-soal" style="display:none;">
@@ -669,11 +676,67 @@
           const videoEl = document.getElementById("webcam-preview");
           videoEl.srcObject = stream;
           document.getElementById("camera-box").style.display = "block";
+          inisiatorDragKamera();
         })
         .catch(err => {
           console.warn("Izin kamera ditolak atau perangkat tidak mendukung kamera:", err);
         });
       }
+    }
+
+    /* LOGIKA FITUR DRAG / GESER KAMERA (TOUCH & MOUSE) */
+    function inisiatorDragKamera() {
+      const camBox = document.getElementById("camera-box");
+      let isDragging = false;
+      let startX, startY, initialLeft, initialTop;
+
+      const onStart = (e) => {
+        isDragging = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        startX = clientX;
+        startY = clientY;
+        
+        const rect = camBox.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+      };
+
+      const onMove = (e) => {
+        if (!isDragging) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
+
+        // Batasi geseran agar tidak keluar dari layar HP/Laptop
+        const maxLeft = window.innerWidth - camBox.offsetWidth;
+        const maxTop = window.innerHeight - camBox.offsetHeight;
+
+        newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+        newTop = Math.max(0, Math.min(newTop, maxTop));
+
+        camBox.style.left = newLeft + "px";
+        camBox.style.top = newTop + "px";
+        camBox.style.right = "auto";
+      };
+
+      const onEnd = () => {
+        isDragging = false;
+      };
+
+      camBox.addEventListener("mousedown", onStart);
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onEnd);
+
+      camBox.addEventListener("touchstart", onStart, { passive: true });
+      document.addEventListener("touchmove", onMove, { passive: true });
+      document.addEventListener("touchend", onEnd);
     }
 
     /* FUNGSI MEMATIKAN KAMERA */
@@ -1003,7 +1066,7 @@
       })
       .then(() => {
         document.getElementById("loading-submit").style.display = "none";
-        matikanKamera(); // MEMATIKAN KAMERA SETELAH SELESAI UJIAN
+        matikanKamera();
         switchScreen("screen-selesai");
         if (document.exitFullscreen) document.exitFullscreen();
       })
@@ -1024,7 +1087,7 @@
       if (countdownInterval) clearInterval(countdownInterval);
       if (examTimerInterval) clearInterval(examTimerInterval);
       
-      matikanKamera(); // MEMATIKAN KAMERA JIKA KEMBALI KE AWAL
+      matikanKamera();
 
       selectedMapel = "";
       userData = null;
