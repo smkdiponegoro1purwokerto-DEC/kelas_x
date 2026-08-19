@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DIPSA CBT - Ujian Online Kelas X</title>
+  <title>DIPSA EXAM CENTER - Kelas X</title>
   <style>
     /* -------------------------------------------------------------
        1. ISOLASI LAYAR
@@ -36,7 +36,7 @@
     
     .cbt-card { background: #ffffff; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 650px; padding: 20px; transition: all 0.3s ease; position: relative; margin: auto; user-select: none; -webkit-user-select: none; }
     .cbt-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eef2f5; padding-bottom: 15px; }
-    .cbt-header h2 { color: #1a73e8; font-size: 22px; }
+    .cbt-header h2 { color: #1a73e8; font-size: 22px; text-transform: uppercase; }
     .cbt-header p { color: #666; font-size: 14px; margin-top: 5px; }
     
     .mapel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
@@ -319,8 +319,8 @@
       <!-- LAYAR 1: PILIH MAPEL -->
       <div class="screen active" id="screen-mapel">
         <div class="cbt-header">
-          <h2>DIPSA CBT - UJIAN ONLINE Kelas X</h2>
-          <p>Pilih Mata Pelajaran untuk Memulai Ujian</p>
+          <h2>DIPSA EXAM CENTER</h2>
+          <p>Kelas X</p>
         </div>
         <div class="mapel-grid">
           <button class="btn-mapel" onclick="pilihMapel('PAI')">📖 PAI</button>
@@ -827,7 +827,6 @@
       document.getElementById("modal-grid-soal").style.display = "none";
     }
 
-    /* MUNCULKAN POP-UP MODAL SELESAI UJIAN AMAN DARI BLUR/FULLSCREEN */
     function bukaModalKonfirmasiSelesai() {
       isConfirming = true;
       let terjawab = 0;
