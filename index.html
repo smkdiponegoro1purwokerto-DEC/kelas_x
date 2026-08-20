@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DIPSA EXAM CENTER - Kelas X</title>
-    <style>
+  <style>
     /* -------------------------------------------------------------
        1. ISOLASI LAYAR
        ------------------------------------------------------------- */
@@ -39,14 +39,22 @@
     .cbt-header h2 { color: #1a73e8; font-size: 22px; text-transform: uppercase; }
     .cbt-header p { color: #666; font-size: 14px; margin-top: 5px; }
     
-    .mapel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
-    .btn-mapel { background: #1a73e8; color: white; border: none; padding: 18px 10px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 16px; }
+    .mapel-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
+      gap: 12px; 
+      margin-top: 15px; 
+      max-height: 380px; 
+      overflow-y: auto; 
+      padding-right: 5px; 
+    }
+    .btn-mapel { background: #1a73e8; color: white; border: none; padding: 14px 10px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; text-align: center; }
     .btn-mapel:hover { background: #1557b0; transform: translateY(-2px); }
     
     .form-group { margin-bottom: 15px; text-align: left; }
     .form-group label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 5px; }
     .form-control { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; }
-    .form-control:focus { border-color: #1a73e8; shadow: 0 0 0 3px rgba(26,115,232,0.2); }
+    .form-control:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.2); }
     
     /* INPUT PASSWORD DENGAN IKON MATA SVG */
     .password-wrapper { position: relative; width: 100%; }
@@ -372,11 +380,25 @@
         <div class="cbt-header">
           <h2>DIPSA EXAM CENTER</h2>
           <p>Kelas X</p>
-          <p>Pilih Mata Pelajaran untuk Mengerjakan Ujian</p>
+          <p style="font-size: 12px; color: #888; margin-top: 4px;">Pilih Mata Pelajaran untuk Mengerjakan Ujian</p>
         </div>
         <div class="mapel-grid">
-          <button class="btn-mapel" onclick="pilihMapel('PAI')">📖 PAI</button>
+          <button class="btn-mapel" onclick="pilihMapel('Latihan')">📝 Latihan</button>
+          <button class="btn-mapel" onclick="pilihMapel('Matematika')">📐 Matematika</button>
+          <button class="btn-mapel" onclick="pilihMapel('Bahasa_Indonesia')">📖 Bahasa Indonesia</button>
+          <button class="btn-mapel" onclick="pilihMapel('Bahasa_Inggris')">🇬🇧 Bahasa Inggris</button>
+          <button class="btn-mapel" onclick="pilihMapel('PAI')">🕌 PAI</button>
           <button class="btn-mapel" onclick="pilihMapel('PIPAS')">🔬 PIPAS</button>
+          <button class="btn-mapel" onclick="pilihMapel('Basa_Jawa')">🗣️ Basa Jawa</button>
+          <button class="btn-mapel" onclick="pilihMapel('Pancasila')">🇮🇩 Pancasila</button>
+          <button class="btn-mapel" onclick="pilihMapel('Informatika')">💻 Informatika</button>
+          <button class="btn-mapel" onclick="pilihMapel('Dasar_MP')">💼 Dasar MP</button>
+          <button class="btn-mapel" onclick="pilihMapel('Dasar_TSM')">🔧 Dasar TSM</button>
+          <button class="btn-mapel" onclick="pilihMapel('Dasar_DKV')">🎨 Dasar DKV</button>
+          <button class="btn-mapel" onclick="pilihMapel('Penjasorkes')">⚽ Penjasorkes</button>
+          <button class="btn-mapel" onclick="pilihMapel('Sejarah')">🏛️ Sejarah</button>
+          <button class="btn-mapel" onclick="pilihMapel('Seni_Budaya')">🎭 Seni Budaya</button>
+          <button class="btn-mapel" onclick="pilihMapel('KKA')">🤝 KKA</button>
         </div>
         <div class="loading" id="loading-mapel">Memeriksa jadwal ujian...</div>
       </div>
@@ -568,7 +590,7 @@
     function pilihMapel(mapel) {
       selectedMapel = mapel;
       requestFullscreenMode();
-      document.getElementById("label-mapel-login").innerText = "Ujian: " + mapel.replace('_', ' ');
+      document.getElementById("label-mapel-login").innerText = "Ujian: " + mapel.replace(/_/g, ' ');
       
       document.getElementById("loading-mapel").style.display = "block";
 
@@ -715,7 +737,6 @@
         let newLeft = initialLeft + deltaX;
         let newTop = initialTop + deltaY;
 
-        // Batasi geseran agar tidak keluar dari layar HP/Laptop
         const maxLeft = window.innerWidth - camBox.offsetWidth;
         const maxTop = window.innerHeight - camBox.offsetHeight;
 
@@ -766,7 +787,6 @@
           if (data.status === "success") {
             userData = data.user;
             
-            // AKTIFKAN KAMERA SETELAH LOGIN BERHASIL
             aktifkanKameraDepan();
 
             document.getElementById("val-nama").innerText = ": " + userData.nama;
@@ -775,7 +795,7 @@
             document.getElementById("val-ttl").innerText = ": " + userData.ttl;
             document.getElementById("val-durasi").innerText = ": " + (durasiMenitMapel > 0 ? durasiMenitMapel + " Menit" : "Tidak Dibatasi");
             
-            document.getElementById("label-mapel-token").innerText = "Ujian: " + selectedMapel.replace('_', ' ');
+            document.getElementById("label-mapel-token").innerText = "Ujian: " + selectedMapel.replace(/_/g, ' ');
             switchScreen("screen-token");
           } else {
             document.getElementById("err-login").innerText = data.message;
@@ -817,7 +837,7 @@
       isExamActive = true;
       currentIndex = 0;
       
-      document.getElementById("label-mapel-soal").innerText = selectedMapel.replace('_', ' ');
+      document.getElementById("label-mapel-soal").innerText = selectedMapel.replace(/_/g, ' ');
       document.getElementById("label-user-soal").innerText = userData.nama + " (" + userData.kelas + ")";
       
       switchScreen("screen-soal");
