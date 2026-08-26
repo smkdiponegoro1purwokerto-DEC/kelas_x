@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DIPSA EXAM CENTER - Kelas X</title>
+
+  <!-- PUSTAKA MATHJAX V2 (SANGAT STABIL UNTUK DOLAR $ AND LATEX) -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+        processEscapes: true
+      }
+    });
+  </script>
+  <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
   <style>
     /* -------------------------------------------------------------
        1. ISOLASI LAYAR
@@ -172,7 +185,7 @@
 
     .soal-box { text-align: left; margin-bottom: 20px; }
     .soal-no { font-weight: bold; color: #1a73e8; font-size: 16px; margin-bottom: 10px; }
-    .soal-teks { font-size: 15px; line-height: 1.5; margin-bottom: 15px; color: #222; }
+    .soal-teks { font-size: 16px; line-height: 1.6; margin-bottom: 15px; color: #222; }
     .soal-teks img { max-width: 100% !important; height: auto !important; border-radius: 8px; margin: 10px 0; display: block; }
     
     .opsi-container { display: flex; flex-direction: column; gap: 10px; }
@@ -183,7 +196,8 @@
     .opsi-item.selected { background-color: #e8f0fe !important; border-color: #1a73e8 !important; color: #1a73e8; font-weight: bold; box-shadow: 0 0 0 1px #1a73e8; }
     .opsi-label { width: 28px; height: 28px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; font-size: 13px; flex-shrink: 0; }
     .opsi-item.selected .opsi-label { background: #1a73e8; color: white; }
-    
+    .opsi-teks { font-size: 15px; }
+
     .nav-soal { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
     .btn-nav { padding: 10px 18px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: #6c757d; color: white; transition: 0.2s; }
     .btn-nav:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -400,7 +414,7 @@
           <button class="btn-mapel" onclick="pilihMapel('KKA')">🤝 KKA</button>
           <button class="btn-mapel" onclick="pilihMapel('Dasar_TSM2')">🔧 Dasar TSM2</button>
           <button class="btn-mapel" onclick="pilihMapel('Dasar_DKV2')">🎨 Dasar DKV2</button>
-           <button class="btn-mapel" onclick="pilihMapel('Basa_Jawa')">🗣️ Basa Jawa</button>
+          <button class="btn-mapel" onclick="pilihMapel('Basa_Jawa')">🗣️ Basa Jawa</button>
         </div>
         <div class="loading" id="loading-mapel">Memeriksa jadwal ujian...</div>
       </div>
@@ -880,6 +894,11 @@
       }, 1000);
     }
 
+    function bersihkanTeks(str) {
+      if (!str) return "";
+      return str.toString();
+    }
+
     function tampilkanSoal(index) {
       const item = listSoalData[index];
       if (!item) return;
@@ -887,13 +906,13 @@
       const noTampil = index + 1;
       
       document.getElementById("display-no-soal").innerText = "Soal No. " + noTampil + " dari " + listSoalData.length;
-      document.getElementById("display-teks-soal").innerHTML = item.soal;
+      document.getElementById("display-teks-soal").innerHTML = bersihkanTeks(item.soal);
       
-      document.getElementById("teks-opsi-A").innerHTML = item.opsiA !== undefined ? item.opsiA : "";
-      document.getElementById("teks-opsi-B").innerHTML = item.opsiB !== undefined ? item.opsiB : "";
-      document.getElementById("teks-opsi-C").innerHTML = item.opsiC !== undefined ? item.opsiC : "";
-      document.getElementById("teks-opsi-D").innerHTML = item.opsiD !== undefined ? item.opsiD : "";
-      document.getElementById("teks-opsi-E").innerHTML = item.opsiE !== undefined ? item.opsiE : "";
+      document.getElementById("teks-opsi-A").innerHTML = bersihkanTeks(item.opsiA);
+      document.getElementById("teks-opsi-B").innerHTML = bersihkanTeks(item.opsiB);
+      document.getElementById("teks-opsi-C").innerHTML = bersihkanTeks(item.opsiC);
+      document.getElementById("teks-opsi-D").innerHTML = bersihkanTeks(item.opsiD);
+      document.getElementById("teks-opsi-E").innerHTML = bersihkanTeks(item.opsiE);
       
       if (item.opsiE === undefined || item.opsiE === null || item.opsiE.toString().trim() === "") {
         document.getElementById("opsi-E").style.display = "none";
@@ -925,6 +944,13 @@
         btnNext.style.display = "inline-block";
         btnFinish.style.display = "none";
       }
+
+      // EKSEKUSI RE-RENDER MATHJAX V2 DENGAN JEDA WAKTU SECARA PASTI
+      setTimeout(() => {
+        if (window.MathJax && window.MathJax.Hub) {
+          MathJax.Hub.Queue(["Typeset", MathJax.Hub, "cbt-app-wrapper"]);
+        }
+      }, 150);
     }
 
     function refreshTampilanSoal() {
