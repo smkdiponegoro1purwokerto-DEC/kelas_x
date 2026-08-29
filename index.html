@@ -570,6 +570,42 @@
     let countdownInterval = null;
     let examTimerInterval = null;
     let cameraStream = null;
+    let wakeLock = null;
+
+    /* FITUR LAYAR TETAP MENYALA (WAKE LOCK API) */
+    async function aktifkanLayarMenyala() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log("Wake Lock Aktif: Layar HP tidak akan mati otomatis.");
+        }
+      } catch (err) {
+        console.warn(`Gagal mengaktifkan Wake Lock: ${err.message}`);
+      }
+    }
+
+    function matikanLayarMenyala() {
+      if (wakeLock !== null) {
+        wakeLock.release().then(() => {
+          wakeLock = null;
+          console.log("Wake Lock Dimatikan.");
+        }).catch(err => console.warn(err));
+      }
+    }
+
+    /* FITUR OPTIMASI FULLSCREEN */
+    function requestFullscreenMode() {
+      let elem = document.documentElement;
+      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen().catch(err => console.log("Fullscreen blocked by browser:", err));
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+          elem.msRequestFullscreen();
+        }
+      }
+    }
 
     function acakArray(array) {
       let currentIndex = array.length, randomIndex;
@@ -687,17 +723,6 @@
       document.getElementById("btn-login-submit").disabled = false;
       document.getElementById("username").disabled = false;
       document.getElementById("password").disabled = false;
-    }
-
-    function requestFullscreenMode() {
-      let elem = document.documentElement;
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen().catch(err => console.log("Fullscreen blocked:", err));
-      } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen();
-      } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen();
-      }
     }
 
     /* FUNGSI MENGAKTIFKAN KAMERA DEPAN */
@@ -850,6 +875,9 @@
       isExamActive = true;
       currentIndex = 0;
       
+      /* MENGAKTIFKAN LAYAR TETAP MENYALA SAAT SOAL DIMULAI */
+      aktifkanLayarMenyala();
+
       document.getElementById("label-mapel-soal").innerText = selectedMapel.replace(/_/g, ' ');
       document.getElementById("label-user-soal").innerText = userData.nama + " (" + userData.kelas + ")";
       
@@ -1055,6 +1083,16 @@
       document.addEventListener("visibilitychange", function() {
         if (document.hidden) {
           eksekusiCekPelanggaran();
+        } else if (isExamActive) {
+          // RE-ACTIVATE LAYAR TETAP MENYALA JIKA SISWA KEMBALI KEDALAM APLIKASI
+          aktifkanLayarMenyala();
+        }
+      });
+
+      // MENGEMBALIKAN FULLSCREEN JIKA SISWA MENGETUK LAYAR SAAT UJIAN AKTIF
+      document.getElementById("cbt-app-wrapper").addEventListener("click", function() {
+        if (isExamActive && !isConfirming) {
+          requestFullscreenMode();
         }
       });
     }
@@ -1086,6 +1124,9 @@
       isExamActive = false;
       if (examTimerInterval) clearInterval(examTimerInterval);
       
+      /* MEMATIKAN FITUR LAYAR TETAP MENYALA SAAT JAWABAN TERKIRIM */
+      matikanLayarMenyala();
+
       document.getElementById("loading-submit").style.display = "block";
       document.getElementById("loading-submit").innerText = retryCount > 0 
         ? `Server sibuk, mencoba mengirim ulang (${retryCount}/5)...` 
@@ -1134,6 +1175,9 @@
       if (examTimerInterval) clearInterval(examTimerInterval);
       
       matikanKamera();
+      
+      /* MEMATIKAN FITUR LAYAR TETAP MENYALA KETIKA KEMBALI KE HALAMAN UTAMA */
+      matikanLayarMenyala();
 
       selectedMapel = "";
       userData = null;
