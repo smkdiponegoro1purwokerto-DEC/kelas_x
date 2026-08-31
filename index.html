@@ -555,7 +555,7 @@
   </div>
 
   <script>
-    // URL APPSCRIPT KELAS X (BISA MENGGUNAKAN SKRIP KELAS X INKLUSI)
+    // URL APPSCRIPT KELAS X
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtS3Bc94opvHSprJuTrLOK86Ay5QyZCZjznNVzgdzO6mc-MXejiqf9DnISKZjV0iJepA/exec";
 
     let selectedMapel = "";
@@ -572,6 +572,9 @@
     let examTimerInterval = null;
     let cameraStream = null;
     let wakeLock = null;
+
+    // VARIABEL GLOBAL STATUS KAMERA SISWA
+    let statusKamera = "KAMERA DITOLAK / ERROR";
 
     /* FITUR PENJAGA LAYAR SUPAYA TETAP NYALA (SCREEN WAKE LOCK) */
     async function aktifkanWakeLock() {
@@ -745,10 +748,16 @@
           videoEl.srcObject = stream;
           document.getElementById("camera-box").style.display = "block";
           inisiatorDragKamera();
+          
+          // UPDATE STATUS KAMERA JIKA USER MEMBERIKAN IZIN
+          statusKamera = "KAMERA AKTIF (ON)";
         })
         .catch(err => {
           console.warn("Izin kamera ditolak atau perangkat tidak mendukung kamera:", err);
+          statusKamera = "KAMERA DITOLAK / ERROR";
         });
+      } else {
+        statusKamera = "TIDAK DUKUNG KAMERA";
       }
     }
 
@@ -865,13 +874,14 @@
       // NONAKTIFKAN TOMBOL SEMENTARA WAKTU MEMPROSES REQUEST
       btnStart.disabled = true;
 
-      // MENGIRIM DENGAN PARAMETER LENGKAP TERMASUK NAMA, KELAS, & RUANG UNTUK LOG MONITORING
+      // MENGIRIM PARAMETER LENGKAP TERMASUK NAMA, KELAS, RUANG, & STATUS KAMERA UNTUK LOG MONITORING
       const urlFetch = `${WEB_APP_URL}?action=getSoal` +
         `&mapel=${encodeURIComponent(selectedMapel)}` +
         `&token=${encodeURIComponent(tokenVal)}` +
         `&nama=${encodeURIComponent(userData ? userData.nama : '')}` +
         `&kelas=${encodeURIComponent(userData ? userData.kelas : '')}` +
-        `&ruang=${encodeURIComponent(userData ? userData.ruang || '-' : '-')}`;
+        `&ruang=${encodeURIComponent(userData ? userData.ruang || '-' : '-')}` +
+        `&kamera=${encodeURIComponent(statusKamera)}`; // <-- TAMBAHAN PARAMETER STATUS KAMERA
 
       fetch(urlFetch)
         .then(res => res.json())
@@ -1201,6 +1211,7 @@
       isExamActive = false;
       isConfirming = false;
       violationCount = 0;
+      statusKamera = "KAMERA DITOLAK / ERROR";
 
       bukaFormLogin();
 
